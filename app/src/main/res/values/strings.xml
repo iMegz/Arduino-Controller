@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Arduino Controller</string>
+    <string name="back">Go back to main menu</string>
 </resources>

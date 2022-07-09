@@ -3,7 +3,15 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/ammha/OneDrive/Documents/projects/Arduino Controller/app/src/main/res/drawable/btn.xml" value="0.123" />
+        <entry key="..\:/Users/ammha/OneDrive/Documents/projects/Arduino Controller/app/src/main/res/drawable/megzer.xml" value="0.253" />
+        <entry key="..\:/Users/ammha/OneDrive/Documents/projects/Arduino Controller/app/src/main/res/font/pt_mono.xml" value="0.1421875" />
         <entry key="..\:/Users/ammha/OneDrive/Documents/projects/Arduino Controller/app/src/main/res/layout/activity_main.xml" value="0.2028985507246377" />
+        <entry key="..\:/Users/ammha/OneDrive/Documents/projects/Arduino Controller/app/src/main/res/layout/config.xml" value="0.2" />
+        <entry key="..\:/Users/ammha/OneDrive/Documents/projects/Arduino Controller/app/src/main/res/layout/controller.xml" value="0.264" />
+        <entry key="..\:/Users/ammha/OneDrive/Documents/projects/Arduino Controller/app/src/main/res/layout/info.xml" value="0.2" />
+        <entry key="..\:/Users/ammha/OneDrive/Documents/projects/Arduino Controller/app/src/main/res/layout/main.xml" value="0.2028985507246377" />
+        <entry key="..\:/Users/ammha/OneDrive/Documents/projects/Arduino Controller/app/src/main/res/layout/splash_screen.xml" value="0.11302083333333333" />
       </map>
     </option>
   </component>
