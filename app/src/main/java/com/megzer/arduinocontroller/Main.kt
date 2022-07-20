@@ -10,17 +10,23 @@ class Main : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         Controls.hideSystemBars(window)
         setContentView(R.layout.main)
+
+        //--------------------------------- Controller button ---------------------------------//
         findViewById<Button>(R.id.btnController).setOnClickListener {
             val intent = Intent(this, Controller::class.java)
             startActivity(intent)
             finish()
         }
+        //-------------------------------------------------------------------------------------//
 
+
+        //-------------------------------- Configuration button -------------------------------//
         findViewById<Button>(R.id.btnConfig).setOnClickListener {
             val intent = Intent(this, Config::class.java)
             startActivity(intent)
             finish()
         }
+        //-------------------------------------------------------------------------------------//
     }
 }
 

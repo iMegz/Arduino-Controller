@@ -26,13 +26,11 @@ class Controls {
         var rotate_clockwise = 'r'
         var rotate_anticlockwise = 't'
         var fire = 'f'
-        var open = 'o'
-        var close = 'c'
+        var open_arm = 'o'
+        var close_arm = 'c'
         var speed = 'm'
-        var arm_up = 'u'
-        var arm_down = 'j'
-        var arm_right = 'k'
-        var arm_left = 'h'
+        var arm_vertical_movement = 'v'
+        var scan = 'u'
         var s1 = "Front"
         var s2 = "Right"
         var s3 = "Left"
