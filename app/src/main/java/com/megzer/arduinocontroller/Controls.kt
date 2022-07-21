@@ -30,7 +30,8 @@ class Controls {
         var close_arm = 'c'
         var speed = 'm'
         var arm_vertical_movement = 'v'
-        var scan = 'u'
+        var scan_on = 'u'
+        var scan_off = 'p'
         var s1 = "Front"
         var s2 = "Right"
         var s3 = "Left"

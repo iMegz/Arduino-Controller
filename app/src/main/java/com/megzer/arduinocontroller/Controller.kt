@@ -1,26 +1,26 @@
 package com.megzer.arduinocontroller
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothDevice
+import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.ImageButton
-import android.widget.SeekBar
-import android.widget.TextView
-import android.widget.ToggleButton
+import android.util.Log
+import android.widget.*
 import androidx.core.text.HtmlCompat
-import com.google.android.material.slider.Slider
 import io.github.controlwear.virtual.joystick.android.JoystickView
 import com.megzer.arduinocontroller.Controls.Companion as c
+import com.megzer.arduinocontroller.Bluetooth.Companion as b
 
 class Controller : AppCompatActivity() {
+    var readingThread: Thread? = null
+    var read = false
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.controller)
         c.hideSystemBars(window)
-        if(Bluetooth.connectedDevice != null) findViewById<TextView>(R.id.deviceName).text = Bluetooth.connectedDevice!!.name
+        if(b.connectedDevice != null) findViewById<TextView>(R.id.deviceName).text = b.connectedDevice!!.name
         else findViewById<TextView>(R.id.deviceName).text = "No connection"
 
 
@@ -33,14 +33,22 @@ class Controller : AppCompatActivity() {
         //-------------------------------------------------------------------------------------//
 
 
+        //----------------------------------- Sensors names ----------------------------------//
+        findViewById<TextView>(R.id.s1).text = resources.getString(R.string.sensor_name, c.s1)
+        findViewById<TextView>(R.id.s2).text = resources.getString(R.string.sensor_name, c.s2)
+        findViewById<TextView>(R.id.s3).text = resources.getString(R.string.sensor_name, c.s3)
+        findViewById<TextView>(R.id.s4).text = resources.getString(R.string.sensor_name, c.s4)
+        //-------------------------------------------------------------------------------------//
+
+
         //------------------------------- Direction mode toggle -------------------------------//
         val directionsToggleButton = findViewById<ToggleButton>(R.id.directionsToggle)
         //-------------------------------------------------------------------------------------//
 
 
         //--------------------------------- Bluetooth button ----------------------------------//
-        val bluetoothButton = findViewById<ImageButton>(R.id.bluetooth)
-        bluetoothButton.setOnClickListener{
+        val bButton = findViewById<ImageButton>(R.id.bluetooth)
+        bButton.setOnClickListener{
             val intent = Intent(this, Bluetooth::class.java)
             startActivity(intent)
             finish()
@@ -176,18 +184,75 @@ class Controller : AppCompatActivity() {
         //-------------------------------------------------------------------------------------//
 
 
+        //--------------------------- Enable reading from sensors -----------------------------//
+        val enableSensorsToggle = findViewById<ToggleButton>(R.id.enableSensorsToggle)
+        enableSensorsToggle.setOnCheckedChangeListener{ _, checked ->
+            if(checked) {
+                sendCmd(c.scan_on)
+                read = true
+                readingThread = Thread{
+                    while (b.isInit() && b.bAdapter.isEnabled && b.connectedDevice != null && read){
+                        try {
+                            var sensor = 0
+                            var data = ""
+
+                            //Get sensor number
+                            var c = b.bInputStream.read()
+                            while (c.toChar() != ':'){
+                                sensor = c - 48
+                                c = b.bInputStream.read()
+                            }
+
+                            //Get sensor value
+                            c = b.bInputStream.read()
+                            while (c.toChar() != ';'){
+                                data += c.toChar()
+                                c = b.bInputStream.read()
+                            }
+                            updateSensorReading(sensor, data.toInt())
+                            Thread.sleep(100)
+                        } catch (e:InterruptedException){
+                            Toast.makeText(this, "Reading sensors disabled", Toast.LENGTH_SHORT).show()
+                        }catch (e:Exception){
+                            Log.v("Error", e.printStackTrace().toString())
+                            readingThread = null
+                        }
+                    }
+                }
+                readingThread?.start()
+            }
+            else {
+                read = false
+                sendCmd(c.scan_off)
+                readingThread = null
+            }
+        }
+        //-------------------------------------------------------------------------------------//
+
+
 
     }
 
     private fun sendCmd(cmd:String){
-        if(Bluetooth.bAdapter.isEnabled && Bluetooth.connectedDevice != null){
+        if(b.isInit() && b.bAdapter.isEnabled && b.connectedDevice != null){
             try {
-                
+                b.bOutputStream.write(cmd.toByteArray())
             }catch (e:Exception){
-
+                b.connectedDevice = null
+                findViewById<TextView>(R.id.deviceName).text = "No connection"
             }
         }
     }
     private fun sendCmd(cmd:Char) = sendCmd(cmd.toString())
+
+    private fun updateSensorReading(sensor:Int, data:Int){
+        when(sensor){
+            1-> findViewById<TextView>(R.id.s1value).text = data.toString()
+            2-> findViewById<TextView>(R.id.s2value).text = data.toString()
+            3-> findViewById<TextView>(R.id.s3value).text = data.toString()
+            4-> findViewById<TextView>(R.id.s4value).text = data.toString()
+        }
+    }
+
 
 }

@@ -7,11 +7,8 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
 import android.content.Intent
-import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.View
@@ -19,9 +16,8 @@ import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import org.w3c.dom.Text
-import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -29,13 +25,16 @@ class Bluetooth : AppCompatActivity() {
     companion object{
         lateinit var bAdapter: BluetoothAdapter
         lateinit var bSocket: BluetoothSocket
+        lateinit var bOutputStream: OutputStream
+        lateinit var bInputStream: InputStream
         var connectedDevice: BluetoothDevice? = null
+        fun isInit() = this::bAdapter.isInitialized
+
     }
     private val devicesList:ArrayList<BluetoothDevice> = ArrayList()
     private val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     lateinit var devicesListView:ListView
     lateinit var arrayAdapter: ArrayAdapter<String>
-    private val handler: Handler = Handler(Looper.getMainLooper())
 
     @SuppressLint("MissingPermission")
     @RequiresApi(Build.VERSION_CODES.M)
@@ -54,52 +53,10 @@ class Bluetooth : AppCompatActivity() {
         //-------------------------------------------------------------------------------------//
 
 
-        //----------------------------- Devices list and connection ---------------------------//
+        //------------------------------------ Devices list -----------------------------------//
         devicesListView = findViewById(R.id.devicesList)
-        devicesListView.setOnItemClickListener{ _, child, position, _ ->
-            val device = devicesList[position]
-            val deviceInView = child as TextView
-            var connecting = true
-
-            val toast = Toast.makeText(this, "Device is not available", Toast.LENGTH_SHORT)
-
-            val animationThread = Thread{
-                val name = device.name
-                while (connecting){
-                    for(i in 1 .. 3){
-                        try {
-                            deviceInView.text = "$name (Connecting${".".repeat(i)})"
-                            Thread.sleep(250)
-                        }catch (e:InterruptedException){
-                            break
-                        }
-                    }
-                }
-            }
-
-            val connectionThread = Thread {
-                try {
-                    bAdapter.cancelDiscovery()
-                    bSocket = device.createRfcommSocketToServiceRecord(uuid)
-                    bSocket.connect()
-                    connectedDevice = device
-                    connecting = false
-                    animationThread.interrupt()
-                    deviceInView.text = "${device.name} (Connected)"
-                } catch (e: Exception) {
-                    toast.show()
-                    connecting = false
-                    animationThread.interrupt()
-                    deviceInView.text = "${device.name} (Failed to connect)"
-                    Thread.sleep(1000)
-                    deviceInView.text = device.name
-                }
-            }
-            connectionThread.start()
-            animationThread.start()
-
-        }
         //-------------------------------------------------------------------------------------//
+
 
 
         //------------------------------ Bluetooth initialization -----------------------------//
@@ -143,6 +100,8 @@ class Bluetooth : AppCompatActivity() {
                     devicesList.add(device)
                 }
                 updateDevicesList()
+            }else{
+                Toast.makeText(this, "Turn on bluetooth first", Toast.LENGTH_SHORT).show()
             }
         }
         //-------------------------------------------------------------------------------------//
@@ -156,6 +115,57 @@ class Bluetooth : AppCompatActivity() {
             startActivity(intentOpenBluetoothSettings)
         }
         //-------------------------------------------------------------------------------------//
+
+
+        //------------------------------------- Connection ------------------------------------//
+        devicesListView.setOnItemClickListener{ _, child, position, _ ->
+            val device = devicesList[position]
+            val deviceInView = child as TextView
+            var connecting = true
+
+            val toast = Toast.makeText(this, "Device is not available", Toast.LENGTH_SHORT)
+
+            val animationThread = Thread{
+                val name = device.name
+                while (connecting){
+                    for(i in 1 .. 3){
+                        try {
+                            deviceInView.text = "$name (Connecting${".".repeat(i)})"
+                            Thread.sleep(250)
+                        }catch (e:InterruptedException){
+                            break
+                        }
+                    }
+                }
+            }
+
+            val connectionThread = Thread {
+                try {
+                    bAdapter.cancelDiscovery()
+                    bSocket = device.createRfcommSocketToServiceRecord(uuid)
+                    bSocket.connect()
+                    connectedDevice = device
+                    connecting = false
+                    animationThread.interrupt()
+                    deviceInView.text = "${device.name} (Connected)"
+                    bOutputStream = bSocket.outputStream
+                    bInputStream = bSocket.inputStream
+                } catch (e: Exception) {
+                    toast.show()
+                    connecting = false
+                    animationThread.interrupt()
+                    deviceInView.text = "${device.name} (Failed to connect)"
+                    Thread.sleep(1000)
+                    deviceInView.text = device.name
+                }
+            }
+            connectionThread.start()
+            animationThread.start()
+
+        }
+        //-------------------------------------------------------------------------------------//
+
+
 
     }
 

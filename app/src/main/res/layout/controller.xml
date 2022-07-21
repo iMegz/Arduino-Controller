@@ -433,7 +433,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:textAlignment="center"
-                android:text="Front"/>
+                android:text="@string/sensor_name"/>
 
             <TextView
                 android:id="@+id/s2"
@@ -441,7 +441,7 @@
                 android:layout_weight="1"
                 android:layout_height="match_parent"
                 android:textAlignment="center"
-                android:text="Back"/>
+                android:text="@string/sensor_name"/>
 
             <TextView
                 android:id="@+id/s3"
@@ -449,7 +449,7 @@
                 android:layout_weight="1"
                 android:layout_height="match_parent"
                 android:textAlignment="center"
-                android:text="Right"/>
+                android:text="@string/sensor_name"/>
 
             <TextView
                 android:id="@+id/s4"
@@ -457,7 +457,7 @@
                 android:layout_weight="1"
                 android:layout_height="match_parent"
                 android:textAlignment="center"
-                android:text="Left"/>
+                android:text="@string/sensor_name"/>
         </LinearLayout>
 
         <LinearLayout
