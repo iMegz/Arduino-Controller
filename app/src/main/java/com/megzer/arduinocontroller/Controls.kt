@@ -19,6 +19,7 @@ class Controls {
         var back = 's'
         var left = 'a'
         var right = 'd'
+        var stop = 'b'
         var front_right = 'e'
         var front_left = 'q'
         var back_right = 'x'

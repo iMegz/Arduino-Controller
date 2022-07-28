@@ -6,6 +6,7 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.MotionEvent
 import android.widget.*
 import androidx.core.text.HtmlCompat
 import io.github.controlwear.virtual.joystick.android.JoystickView
@@ -125,6 +126,8 @@ class Controller : AppCompatActivity() {
                     }
 
                 }
+            }else{
+                sendCmd(c.stop)
             }
         }
         //-------------------------------------------------------------------------------------//
@@ -161,12 +164,13 @@ class Controller : AppCompatActivity() {
         //--------------------------------- Speed controller ----------------------------------//
         val speedController = findViewById<SeekBar>(R.id.speedController)
         speedController.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
-            override fun onProgressChanged(seek: SeekBar?, progress: Int, fromUser: Boolean) {
+            override fun onProgressChanged(seek: SeekBar?, progress: Int, fromUser: Boolean) {}
+            override fun onStartTrackingTouch(seek: SeekBar?) {}
+            override fun onStopTrackingTouch(seek: SeekBar?) {
+                val progress = seek?.progress
                 val cmd = "${c.speed}:$progress;"
                 sendCmd(cmd)
             }
-            override fun onStartTrackingTouch(seek: SeekBar?) {}
-            override fun onStopTrackingTouch(seek: SeekBar?) {}
         })
         //-------------------------------------------------------------------------------------//
 
@@ -174,12 +178,13 @@ class Controller : AppCompatActivity() {
         //------------------------- Arm vertical movement controller --------------------------//
         val armVerticalMovementController = findViewById<SeekBar>(R.id.armVerticalMovementController)
         armVerticalMovementController.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
-            override fun onProgressChanged(seek: SeekBar?, progress: Int, fromUser: Boolean) {
+            override fun onProgressChanged(seek: SeekBar?, progress: Int, fromUser: Boolean) {}
+            override fun onStartTrackingTouch(seek: SeekBar?) {}
+            override fun onStopTrackingTouch(seek: SeekBar?) {
+                val progress = seek?.progress
                 val cmd = "${c.arm_vertical_movement}:$progress;"
                 sendCmd(cmd)
             }
-            override fun onStartTrackingTouch(seek: SeekBar?) {}
-            override fun onStopTrackingTouch(seek: SeekBar?) {}
         })
         //-------------------------------------------------------------------------------------//
 
@@ -209,11 +214,13 @@ class Controller : AppCompatActivity() {
                                 data += c.toChar()
                                 c = b.bInputStream.read()
                             }
+
                             updateSensorReading(sensor, data.toInt())
-                            Thread.sleep(100)
+                            Thread.sleep(60)
                         } catch (e:InterruptedException){
                             Toast.makeText(this, "Reading sensors disabled", Toast.LENGTH_SHORT).show()
                         }catch (e:Exception){
+                            b.reconnect(b.connectedDevice!!, 1)
                             Log.v("Error", e.printStackTrace().toString())
                             readingThread = null
                         }
@@ -234,12 +241,13 @@ class Controller : AppCompatActivity() {
     }
 
     private fun sendCmd(cmd:String){
-        if(b.isInit() && b.bAdapter.isEnabled && b.connectedDevice != null){
+        if(b.isInit() && b.bAdapter.isEnabled && b.connectedDevice != null && !b.reconnecting){
             try {
                 b.bOutputStream.write(cmd.toByteArray())
             }catch (e:Exception){
-                b.connectedDevice = null
-                findViewById<TextView>(R.id.deviceName).text = "No connection"
+                b.reconnect(b.connectedDevice!!)
+                //b.connectedDevice = null
+                //findViewById<TextView>(R.id.deviceName).text = "No connection"
             }
         }
     }

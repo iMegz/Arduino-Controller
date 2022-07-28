@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -22,6 +23,12 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 class Bluetooth : AppCompatActivity() {
+    private val devicesList:ArrayList<BluetoothDevice> = ArrayList()
+    private lateinit var devicesListView:ListView
+    private lateinit var arrayAdapter: ArrayAdapter<String>
+    private val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+
+
     companion object{
         lateinit var bAdapter: BluetoothAdapter
         lateinit var bSocket: BluetoothSocket
@@ -29,12 +36,30 @@ class Bluetooth : AppCompatActivity() {
         lateinit var bInputStream: InputStream
         var connectedDevice: BluetoothDevice? = null
         fun isInit() = this::bAdapter.isInitialized
+        var reconnecting = false
 
+        @SuppressLint("MissingPermission")
+        fun reconnect(device:BluetoothDevice, trials:Int = 1){
+            val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+            val connectionThread = Thread {
+                try {
+                    reconnecting = true
+                    bAdapter.cancelDiscovery()
+                    bSocket = device.createRfcommSocketToServiceRecord(uuid)
+                    bSocket.connect()
+                    connectedDevice = device
+                    bOutputStream = bSocket.outputStream
+                    bInputStream = bSocket.inputStream
+                } catch (e: Exception) {
+                    if(trials < 4) reconnect(device, trials + 1)
+                } finally {
+                    reconnecting = false
+                }
+            }
+            connectionThread.start()
+        }
     }
-    private val devicesList:ArrayList<BluetoothDevice> = ArrayList()
-    private val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-    lateinit var devicesListView:ListView
-    lateinit var arrayAdapter: ArrayAdapter<String>
+
 
     @SuppressLint("MissingPermission")
     @RequiresApi(Build.VERSION_CODES.M)
@@ -141,16 +166,24 @@ class Bluetooth : AppCompatActivity() {
 
             val connectionThread = Thread {
                 try {
-                    bAdapter.cancelDiscovery()
-                    bSocket = device.createRfcommSocketToServiceRecord(uuid)
-                    bSocket.connect()
-                    connectedDevice = device
-                    connecting = false
-                    animationThread.interrupt()
-                    deviceInView.text = "${device.name} (Connected)"
-                    bOutputStream = bSocket.outputStream
-                    bInputStream = bSocket.inputStream
+                    if(connectedDevice != null){
+                        reconnect(connectedDevice!!)
+                        connecting = false
+                        animationThread.interrupt()
+                        deviceInView.text = "${device.name} (Connected)"
+                    }else{
+                        bAdapter.cancelDiscovery()
+                        bSocket = device.createRfcommSocketToServiceRecord(uuid)
+                        bSocket.connect()
+                        connectedDevice = device
+                        connecting = false
+                        animationThread.interrupt()
+                        deviceInView.text = "${device.name} (Connected)"
+                        bOutputStream = bSocket.outputStream
+                        bInputStream = bSocket.inputStream
+                    }
                 } catch (e: Exception) {
+                    Log.v("Error", e.printStackTrace().toString())
                     toast.show()
                     connecting = false
                     animationThread.interrupt()
@@ -164,7 +197,6 @@ class Bluetooth : AppCompatActivity() {
 
         }
         //-------------------------------------------------------------------------------------//
-
 
 
     }
@@ -189,4 +221,6 @@ class Bluetooth : AppCompatActivity() {
             arrayAdapter.notifyDataSetChanged()
         }
     }
+
+
 }
